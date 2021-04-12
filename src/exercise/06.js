@@ -10,13 +10,23 @@ import {PokemonForm, fetchPokemon, PokemonInfoFallback, PokemonDataView} from '.
 
 function PokemonInfo({pokemonName}) {
   // 🐨 Have state for the pokemon (null)
-  const [pokemon, setPokemon] = React.useState(null)
+  /*const [pokemon, setPokemon] = React.useState(null)
+  const [error, setError] = React.useState(null)
+  const [status, setStatus] = React.useState('idle')*/
+  const [state, setState] = React.useState({
+      pokemon:null,
+      error: null,
+      status: 'idle'
+  })
+  const {pokemon, error, status} = state
   // 🐨 use React.useEffect where the callback should be called whenever the
   // pokemon name changes.
   React.useEffect(() => {
     if(pokemonName === '') return
     //limpa os dados
-    setPokemon(null)
+    //setPokemon(null)
+    //setError(null)
+    setState({pokemon:null, error:null})
     //fetchPokemon é uma funcão assincrona
     //Assincrona pode retornar a qualquer momento, por isso deve ter uma chamada de volta
     //Callback no caso
@@ -29,11 +39,13 @@ function PokemonInfo({pokemonName}) {
     
     async function getPokemon(){
         try{
+            setState({status:'pending'}) // pendente
             let data = await fetchPokemon(pokemonName)
-            setPokemon(data)
+            setState({pokemon: data, status:'resolved'})
         }
         catch(erro){
-            alert(erro.message)
+            //alert(erro.message)
+            setState({error: erro, status:'rejected'})
         }
     }
     getPokemon()
@@ -52,9 +64,27 @@ function PokemonInfo({pokemonName}) {
 
 
   // 💣 remove this
-  if (pokemonName === '') return 'Submit a pokemon'
+  /*if (pokemonName === '') return 'Submit a pokemon'
+  else if (error) return(
+  <div role="alert">
+  There was an error: <pre style={{whiteSpace: 'normal'}}>{error.message}</pre>
+  </div>
+  )
   else if(pokemon !== '' && pokemon === null) return <PokemonInfoFallback name={pokemonName} />
-  else return <PokemonDataView pokemon={pokemon} />
+  else return <PokemonDataView pokemon={pokemon} />*/
+
+  switch(status){
+      case 'idle':
+        return 'Submit a pokemon'
+      case 'rejected':
+          return (<div role="alert">
+  There was an error: <pre style={{whiteSpace: 'normal'}}>{error.message}</pre>
+  </div>)
+      case 'pending':
+          return <PokemonInfoFallback name={pokemonName} />
+      default:
+          return <PokemonDataView pokemon={pokemon} />
+  }
 }
 
 function App() {
